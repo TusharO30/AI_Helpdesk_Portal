@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Helpdesk - Dark Aesthetic</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS Variables for theme switching, updated for reference image colors */
+        :root {
+            /* Light Mode (placeholder, if needed) */
+            --bg-body: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --panel-bg: #ffffff;
+            --chat-bg: #f8f9fa;
+            --text-main: #2b2d42;
+            --text-muted: #888;
+            --ai-bubble: #ffffff;
+            --ai-text: #444;
+            --ai-border: #eef0f2;
+            --user-bubble: #0c6dfd; /* Primary blue from reference */
+            --input-bg: #f0f0f0;
+            --input-border: #e2e8f0;
+            --input-text: #2b2d42;
+            --header-border: #eee;
+            --header-bg: #ffffff;
+            --primary: #0c6dfd;
+            --icon-color: #555;
+            --online-dot: #2ecc71;
+            --toggle-bg: #e2e8f0;
+        }
+
+        /* Dark Mode - primary aesthetic based on reference image */
+        body.dark-mode {
+            --bg-body: #0a0e17; /* Very dark background from reference */
+            --panel-bg: #0a0e17; /* Same as body for seamless look */
+            --chat-bg: #0a0e17; /* Same as body for seamless look */
+            --text-main: #f8fafc; /* Light text */
+            --text-muted: #94a3b8; /* Muted light text */
+            --ai-bubble: #172031; /* Dark bubble from reference */
+            --ai-text: #f8fafc; /* Light text in AI bubble */
+            --ai-border: transparent;
+            --user-bubble: #0c6dfd; /* Specific blue for send icon and can be user bubble */
+            --input-bg: #172031; /* Input background from reference */
+            --input-border: #1e293b; /* Subtle border for input */
+            --input-text: #f8fafc;
+            --header-border: #1e293b; /* Border for header */
+            --header-bg: #0a0e17;
+            --primary: #0c6dfd;
+            --icon-color: #f8fafc;
+            --toggle-bg: #1e293b;
+        }
+
+        body { 
+            font-family: 'Inter', 'Segoe UI', sans-serif; 
+            background: var(--bg-body); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            color: var(--text-main);
+            transition: background 0.3s ease;
+        }
+
+        .chat-panel { 
+            background: var(--panel-bg); 
+            width: 100%;
+            max-width: 100%; /* Full width of body */
+            height: 100vh; /* Full height of body */
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden;
+            transition: background 0.3s ease;
+            position: relative;
+        }
+
+        /* Header based on reference image */
+        .chat-header {
+            padding: 16px 32px; /* Matched padding */
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--header-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-info { display: flex; align-items: center; gap: 16px; } /* Matched gap */
+
+        .header-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px; /* Matched corner radius */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .theme-toggle {
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            padding: 8px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+            color: var(--icon-color);
+        }
+
+        .theme-toggle:active { transform: scale(0.9); }
+
+        .status-dot {
+            width: 10px; height: 10px;
+            background: var(--online-dot); border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Chat Area based on reference image */
+        .chat-box { 
+            flex-grow: 1; 
+            overflow-y: auto; 
+            background: var(--chat-bg); 
+            padding: 32px; /* Matched padding */
+            display: flex; 
+            flex-direction: column; 
+            gap: 16px; /* Matched gap */
+        }
+
+        .msg { 
+            padding: 16px 24px; /* Matched padding */
+            font-size: 1rem; /* Matched size */
+            max-width: 40%; /* Reduced for better look, still ample */
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .user { 
+            background: var(--user-bubble); 
+            color: white; 
+            align-self: flex-end; 
+            border-radius: 12px 12px 2px 12px; /* Matched corner style */
+        }
+
+        .ai { 
+            background: var(--ai-bubble); 
+            color: var(--ai-text); 
+            align-self: flex-start; 
+            border-radius: 12px 12px 12px 2px; /* Matched corner style */
+            border: 1px solid var(--ai-border);
+        }
+
+        /* Input Area based on reference image */
+        .input-wrapper {
+            padding: 16px; /* Use padding instead of position for spacing */
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--panel-bg); /* Ensure it matches the background */
+        }
+
+        .input-container {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border); 
+            border-radius: 20px; /* Matched radius */
+        }
+
+        input { 
+            flex-grow: 1;
+            padding: 16px 0; 
+            background: transparent;
+            border: none;
+            outline: none; 
+            color: var(--input-text);
+            font-size: 1rem;
+        }
+
+        button.send-btn {
+            background: var(--primary);
+            color: white; border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            transition: background 0.2s ease;
+        }
+
+        button.send-btn:hover {
+            background: #0056b3;
+        }
+
+        /* typing indicator */
+        .typing {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            padding: 5px 32px;
+            display: none;
+            position: absolute;
+            bottom: 76px;
+            left: 0;
+        }
+    </style>
+</head>
+<body class="dark-mode">
+
+    <div class="chat-panel">
+        <div class="chat-header">
+            <div class="header-info">
+                <div class="header-avatar">H</div>
+                <div>
+                    <div style="font-weight: 700; font-size: 1.2rem;">Helpdesk AI</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+                        <span class="status-dot"></span> Online
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+                    <span id="themeIcon">☀️</span>
+                </button>
+                <button class="theme-toggle" onclick="logout()" title="Log Out" style="color: #ee0a0a;">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="chatBox" class="chat-box">
+            <div class="msg ai">Hello! I'm Helpdesk AI. Click the theme toggle above to change my appearance. How can I help you today?</div>
+        </div>
+
+        <div id="typingIndicator" class="typing">Assistant is typing...</div>
+
+        <div class="input-wrapper">
+            <div class="input-container">
+                <input type="text" id="userInput" placeholder="Ask me something..." autocomplete="off">
+            </div>
+            <button class="send-btn" onclick="sendMessage()">
+                <!-- Minimal paper plane send icon -->
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2z"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://my-helpdesk-backend.onrender.com';
+        
+        // --- USER AUTH GUARD ---
+        if (!localStorage.getItem('token')) {
+            window.location.href = 'auth.html';
+        }
+
+        // --- LOGOUT FUNCTION ---
+        function logout() {
+            localStorage.clear(); // Clears token, role, theme, AND saved chat
+            window.location.href = 'auth.html';
+        }
+
+        const inputField = document.getElementById('userInput');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const themeIcon = document.getElementById('themeIcon');
+        const body = document.body;
+
+        // --- CHAT MEMORY SYSTEM ---
+        // 1. Load history from memory (or start fresh if empty)
+        let chatHistory = JSON.parse(localStorage.getItem('savedChat')) || [];
+
+        // 2. Draw the saved history on the screen when the page loads
+        function loadSavedChat() {
+            if (chatHistory.length > 0) {
+                const box = document.getElementById('chatBox');
+                box.innerHTML = ''; // Remove the default "Hello!" greeting
+                
+                chatHistory.forEach(msg => {
+                    const type = msg.role === 'user' ? 'user' : 'ai';
+                    addMsg(msg.text, type);
+                });
+            }
+        }
+
+        // Toggle Theme Logic
+        function toggleTheme() {
+            body.classList.toggle('dark-mode');
+            const isDark = body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeIcon(isDark);
+        }
+
+        function updateThemeIcon(isDark) {
+            themeIcon.innerText = isDark ? '☀️' : '🌙';
+        }
+
+        // Load saved theme preference
+        const currentTheme = localStorage.getItem('theme');
+        if (currentTheme) {
+            if (currentTheme === 'dark') {
+                body.classList.add('dark-mode');
+                updateThemeIcon(true);
+            } else {
+                body.classList.remove('dark-mode');
+                updateThemeIcon(false);
+            }
+        } else {
+            updateThemeIcon(true);
+        }
+
+        inputField.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+        async function sendMessage() {
+            const question = inputField.value.trim();
+            if(!question) return;
+
+            addMsg(question, 'user');
+            inputField.value = "";
+            typingIndicator.style.display = 'block';
+
+            // Create a temporary history array to send to the AI
+            const tempHistory = [...chatHistory];
+
+            try {
+                const res = await fetch(`${API_URL}/ask`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question, history: tempHistory })
+                });
+                const data = await res.json();
+                
+                addMsg(data.answer, 'ai');
+                
+                // 3. Permanently push the new conversation pair into the array
+                chatHistory.push({ role: 'user', text: question }, { role: 'model', text: data.answer });
+                
+                // 4. Save the updated array back to browser memory
+                localStorage.setItem('savedChat', JSON.stringify(chatHistory));
+
+            } catch (err) {
+                addMsg("I'm having trouble reaching the server. Is it running?", 'ai');
+            } finally {
+                typingIndicator.style.display = 'none';
+            }
+        }
+
+        function addMsg(text, type) {
+            const box = document.getElementById('chatBox');
+            const div = document.createElement('div');
+            div.className = `msg ${type}`;
+            div.innerHTML = text.replace(/\n/g, '<br>');
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // Initialize chat history when the script loads
+        loadSavedChat();
+    </script>
+</body>
+</html>

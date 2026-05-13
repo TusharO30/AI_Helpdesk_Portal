@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Helpdesk Portal</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; display: flex; gap: 20px; justify-content: center; overflow-x: auto; }
+        .panel { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 380px; display: flex; flex-direction: column; min-width: 320px; }
+        h2 { margin-top: 0; color: #333; font-size: 1.2rem; }
+        textarea, input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { background-color: #007bff; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #0056b3; }
+        .chat-box { flex-grow: 1; border: 1px solid #eee; background: #fafafa; border-radius: 5px; padding: 10px; overflow-y: auto; height: 350px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px; }
+        .message { padding: 8px 12px; border-radius: 15px; max-width: 80%; font-size: 0.9rem; }
+        .user-msg { background-color: #007bff; color: white; align-self: flex-end; }
+        .ai-msg { background-color: #e9ecef; color: #333; align-self: flex-start; }
+        .status { font-size: 0.8rem; color: green; margin-top: 5px; min-height: 15px; }
+        .ticket-card { border: 1px solid #ccc; padding: 12px; border-radius: 6px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div id="statsBar" style="width: 100%; max-width: 1200px; display: flex; gap: 20px; margin-bottom: 20px;">
+    <div class="panel" style="width: auto; flex: 1; padding: 15px; text-align: center; height: auto;">
+        <h3 style="margin:0; font-size: 0.9rem; color: #666;">🧠 AI Knowledge</h3>
+        <div id="stat-knowledge" style="font-size: 1.5rem; font-weight: bold; color: #007bff;">0</div>
+    </div>
+    <div class="panel" style="width: auto; flex: 1; padding: 15px; text-align: center; height: auto;">
+        <h3 style="margin:0; font-size: 0.9rem; color: #666;">⏳ Open Tickets</h3>
+        <div id="stat-pending" style="font-size: 1.5rem; font-weight: bold; color: #dc3545;">0</div>
+    </div>
+    <div class="panel" style="width: auto; flex: 1; padding: 15px; text-align: center; height: auto;">
+        <h3 style="margin:0; font-size: 0.9rem; color: #666;">✅ Resolved</h3>
+        <div id="stat-resolved" style="font-size: 1.5rem; font-weight: bold; color: #28a745;">0</div>
+    </div>
+</div>
+
+    <!-- PANEL 1: ADMIN UPLOAD -->
+    <div class="panel">
+        <h2>📁 Admin: Knowledge Base</h2>
+        <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+            <p style="font-size: 0.85rem; color: #666; margin-top: 0;">Option A: Paste text</p>
+            <textarea id="docText" rows="3" placeholder="Example: Leave Policy..."></textarea>
+            <button onclick="uploadDoc()" style="width: 100%;">Upload Text</button>
+            <div id="uploadStatus" class="status"></div>
+        </div>
+        <div style="background: #f8f9fa; padding: 10px; border-radius: 5px;">
+            <p style="font-size: 0.85rem; color: #666; margin-top: 0;">Option B: Upload PDF</p>
+            <input type="file" id="pdfInput" accept="application/pdf" style="width: 100%;">
+            <button onclick="uploadPDF()" style="background-color: #28a745; width: 100%;">Upload PDF</button>
+            <div id="pdfUploadStatus" class="status"></div>
+        </div>
+    </div>
+
+    <!-- PANEL 2: CHAT -->
+    <div class="panel">
+        <h2>💬 Helpdesk Chat</h2>
+        <div class="chat-box" id="chatBox">
+            <div class="message ai-msg">Hi! How can I help you today?</div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="questionInput" placeholder="Ask a question..." onkeypress="handleEnter(event)">
+            <button onclick="askQuestion()">Send</button>
+        </div>
+    </div>
+
+    <!-- PANEL 3: NEW TICKETING DASHBOARD -->
+    <div class="panel">
+        <h2>🎫 Open Tickets</h2>
+        <p style="font-size: 0.85rem; color: #666; margin-top: 0;">Questions the AI couldn't answer.</p>
+        <button onclick="fetchTickets()" style="background-color: #17a2b8; margin-bottom: 15px; width: 100%;">Refresh Tickets</button>
+        <div id="ticketContainer" style="display: flex; flex-direction: column; overflow-y: auto; height: 400px; padding-right: 5px;">
+            <!-- Tickets load here -->
+        </div>
+    </div>
+    <div class="panel">
+    <h2>📚 AI Library</h2>
+    <p style="font-size: 0.85rem; color: #666; margin-top: 0;">Manage indexed knowledge chunks.</p>
+    <button onclick="fetchLibrary()" style="background-color: #6c757d; margin-bottom: 15px;">Refresh Library</button>
+    <div id="libraryContainer" style="overflow-y: auto; height: 400px; font-size: 0.8rem;">
+        </div>
+</div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+        let chatHistory = [];
+
+        async function uploadDoc() {
+            const text = document.getElementById('docText').value;
+            const statusDiv = document.getElementById('uploadStatus');
+            if (!text) return alert("Please enter text!");
+            statusDiv.textContent = "Uploading...";
+            try {
+                const response = await fetch(`${API_URL}/upload-doc`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                const data = await response.json();
+                statusDiv.textContent = "✅ " + data.message;
+                document.getElementById('docText').value = "";
+            } catch (e) { statusDiv.textContent = "❌ Error."; }
+        }
+
+        async function uploadPDF() {
+            const fileInput = document.getElementById('pdfInput');
+            const file = fileInput.files[0];
+            const statusDiv = document.getElementById('pdfUploadStatus');
+            if (!file) return alert("Select PDF!");
+            statusDiv.textContent = "Processing PDF...";
+            const formData = new FormData();
+            formData.append('pdfDocument', file);
+            try {
+                const response = await fetch(`${API_URL}/upload-pdf`, { method: 'POST', body: formData });
+                const data = await response.json();
+                statusDiv.textContent = "✅ " + data.message;
+                fileInput.value = "";
+            } catch (e) { statusDiv.textContent = "❌ Error."; }
+        }
+
+        async function askQuestion() {
+            const input = document.getElementById('questionInput');
+            const question = input.value;
+            if (!question) return;
+
+            addMessageToChat(question, 'user-msg');
+            input.value = ""; 
+            const loadingId = addMessageToChat("Thinking...", 'ai-msg');
+
+            try {
+                const response = await fetch(`${API_URL}/ask`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question, history: chatHistory }) 
+                });
+                const data = await response.json();
+                document.getElementById(loadingId).remove();
+                addMessageToChat(data.answer, 'ai-msg', data.sources);
+
+                chatHistory.push({ role: 'user', text: question });
+                chatHistory.push({ role: 'model', text: data.answer });
+
+                // Update Tickets instantly if one was created
+                if (data.ticket) fetchTickets();
+
+            } catch (e) {
+                document.getElementById(loadingId).remove();
+                addMessageToChat("Error.", 'ai-msg');
+            }
+        }
+
+        // --- TICKETING LOGIC ---
+        async function fetchTickets() {
+            const container = document.getElementById('ticketContainer');
+            container.innerHTML = "<p style='font-size: 0.9rem;'>Loading...</p>";
+            try {
+                const response = await fetch(`${API_URL}/tickets`);
+                const tickets = await response.json();
+                container.innerHTML = "";
+                if (tickets.length === 0) {
+                    container.innerHTML = "<p style='color: green; font-size: 0.9rem;'>✅ No open tickets.</p>";
+                    return;
+                }
+                tickets.forEach(ticket => {
+                    const ticketDiv = document.createElement('div');
+                    ticketDiv.className = "ticket-card";
+                    ticketDiv.innerHTML = `
+                        <p style="margin: 0 0 10px 0;"><b>User:</b> "${ticket.question}"</p>
+                        <textarea id="reply-${ticket._id}" placeholder="Type the correct answer here..." style="font-size: 0.8rem; height: 60px;"></textarea>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.7rem; color: #888;">${new Date(ticket.createdAt).toLocaleDateString()}</span>
+                            <button onclick="resolveTicket('${ticket._id}')" style="background-color: #28a745; padding: 5px 10px; font-size: 0.75rem;">Teach AI & Resolve</button>
+                        </div>
+                    `;
+                    container.appendChild(ticketDiv);
+                });
+            } catch (e) { 
+                console.error(e); 
+                container.innerHTML = "❌ Error."; 
+                }
+        }
+
+        async function resolveTicket(ticketId) {
+            const adminAnswer = document.getElementById(`reply-${ticketId}`).value;
+            if (!adminAnswer) return alert("Please type an answer to teach the AI!");
+
+            try {
+                await fetch(`${API_URL}/resolve-ticket`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ticketId, adminAnswer }) // Sending both ID and Answer
+                });
+                fetchTickets(); // Refresh the dashboard
+            } catch (e) {
+                alert("Error resolving ticket.");
+            }
+        }
+
+        function addMessageToChat(text, className, sources = []) {
+            const chatBox = document.getElementById('chatBox');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${className}`;
+            let htmlContent = text.replace(/\n/g, '<br>');
+            if (sources && sources.length > 0) {
+                let sourcesHtml = `<details style="margin-top: 10px; font-size: 0.75rem; color: #555;"><summary>🔍 Knowledge Sources</summary>`;
+                sources.forEach((src, index) => {
+                    sourcesHtml += `<div style="margin-top: 5px;"><b>Snippet ${index + 1}:</b> ${src.substring(0, 150)}...</div>`;
+                });
+                sourcesHtml += `</details>`;
+                htmlContent += sourcesHtml;
+            }
+            msgDiv.innerHTML = htmlContent;
+            msgDiv.id = 'msg-' + Date.now();
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return msgDiv.id;
+        }
+        async function fetchLibrary() {
+            const container = document.getElementById('libraryContainer');
+            container.innerHTML = "Loading...";
+            try {
+                const response = await fetch(`${API_URL}/library`);
+                const items = await response.json();
+                container.innerHTML = "";
+
+                if (items.length === 0) {
+                    container.innerHTML = "The library is empty.";
+                    return;
+                }
+
+                items.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.style.cssText = "border-bottom: 1px solid #eee; padding: 10px 0; display: flex; flex-direction: column; gap: 5px;";
+                    itemDiv.innerHTML = `
+                        <div style="color: #444; line-height: 1.2;">${item.text.substring(0, 100)}...</div>
+                        <button onclick="deleteKnowledge('${item._id}')" style="background: #dc3545; padding: 2px 8px; font-size: 0.7rem; width: fit-content;">Delete</button>
+                    `;
+                    container.appendChild(itemDiv);
+                });
+            } catch (e) { container.innerHTML = "Error loading library."; }
+        }
+
+        async function deleteKnowledge(id) {
+            if (!confirm("Are you sure you want to remove this from the AI's memory?")) return;
+            try {
+                await fetch(`${API_URL}/library/${id}`, { method: 'DELETE' });
+                fetchLibrary(); // Refresh list
+            } catch (e) { alert("Error deleting."); }
+        }
+        async function updateAnalytics() {
+            try {
+                const response = await fetch(`${API_URL}/analytics`);
+                const data = await response.json();
+                
+                document.getElementById('stat-knowledge').textContent = data.knowledgeCount;
+                document.getElementById('stat-pending').textContent = data.pending;
+                document.getElementById('stat-resolved').textContent = data.resolved;
+            } catch (e) { console.error("Analytics Error", e); }
+        }
+
+        // Add this to your window.onload so it loads on start
+        // Consolidated load function to ensure everything starts together
+            window.onload = () => {
+                fetchTickets();
+                fetchLibrary();
+                updateAnalytics();
+            };
+
+            function handleEnter(e) { 
+                if (e.key === 'Enter') askQuestion(); 
+            }
+    </script>
+</body>
+</html>
