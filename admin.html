@@ -276,13 +276,13 @@
         
         // Kick them out if they aren't logged in OR if they aren't an admin
         if (!token || role !== 'admin') {
-            window.location.href = 'auth.html';
+            window.location.href = 'index.html';
         }
 
         // --- LOGOUT FUNCTION ---
         function logout() {
             localStorage.clear(); // Clears all saved data
-            window.location.href = 'auth.html';
+            window.location.href = 'index.html';
         }
 
         // Upgraded toggle for Admin page

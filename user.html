@@ -260,13 +260,13 @@
         
         // --- USER AUTH GUARD ---
         if (!localStorage.getItem('token')) {
-            window.location.href = 'auth.html';
+            window.location.href = 'index.html';
         }
 
         // --- LOGOUT FUNCTION ---
         function logout() {
             localStorage.clear(); // Clears token, role, theme, AND saved chat
-            window.location.href = 'auth.html';
+            window.location.href = 'index.html';
         }
 
         const inputField = document.getElementById('userInput');
